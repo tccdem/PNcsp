@@ -21,7 +21,7 @@ This program use Python 3.12.3 under Anaconda3.
 ```
 5) Run the Python code:
 ```bash
-  python pncsp.py <formula> <#_of_neighbor> <energy_filter>
+  python PNcsp.py <formula> <#_of_neighbor> <energy_filter>
 ```
 \<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
