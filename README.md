@@ -23,9 +23,9 @@ This program use Python 3.12.3 under Anaconda3.
 ```bash
   python pncsp.py <formula> <#_of_neighbor> <energy_filter>
 ```
-\<formula\>: Formula of chemical system for query (Ex. Cu2Mn1Al1)
+\<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
-\<#_of_neighbor\>: How many neighbor will be taken into account in similarity search. (default: 3)
+\<#_of_neighbor\>: How many neighbor will be taken into account in similarity search. (default: 1)
 
 \<energy_filter\>: Selected neighbors can be limited with Energy Threshold parameter. (default: "<0") unit: [eV/atom]
 
