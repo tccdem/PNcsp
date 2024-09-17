@@ -4,7 +4,8 @@ This repository represents the efforts of the [TCCDEM](https://github.com/tccdem
 
 This work introduces a novel strategy for crystal structure prediction founded upon the principle of chemical similarity.  Our method leverages Mendeleev's Periodic Number (PN) as a quantitative measure of substitutability to identify potential crystal structures for unexplored chemical systems. We apply this concept to predict stable equiatomic binary phases, demonstrating its efficacy in uncovering both known and novel structures.
 
-![Figure1_latex](https://github.com/Coranora/SimilarityPredictor/assets/16453333/7e4259b6-c131-47eb-8dec-51079949b251)
+![Graphical_Abstract_3](https://github.com/user-attachments/assets/cf590168-ab66-4dc7-8954-de794dfbf780)
+
 Representation of the workflow for predicting stable materials based on PN similarity. Selected prototypes are subjected to further analyses for the investigation of electronic properties.
 
 
