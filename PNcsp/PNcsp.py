@@ -63,13 +63,13 @@ def dist_classifier(PNs,res):
         dists.append(dist_max)
     return dists
 
-def get_Neig(formula, N_neig=3):
+def get_Neig(formula, N_neig=1):
     elems, counts, PNs=convert_formula(formula)
     PN_new_all=[]
     for i in range(len(PNs)):
         PN_new=[]
 
-        for j in np.arange(-1*N_neig,N_neig+1):
+        for j in np.arange(-1*N_neig,N_neig+1,N_neig):
             if((PNs[i]+j>0) and (PNs[i]+j<119)):
                 PN_new.append(PNs[i]+j)
 
@@ -225,14 +225,18 @@ def main():
     args = parser.parse_args()
 
     query_formula=args.formula
-    N_neig=args.neighbor
-    E_filter=args.filter
+    N_neig=int(args.neighbor)
 
-    res,neigh_list,exchange_dict=get_Neig(formula=query_formula,N_neig=1)
+    if(args.filter =="none"):
+        E_filter=args.filter
+    else:
+        E_filter=int(args.filter)
+
+    res,neigh_list,exchange_dict=get_Neig(formula=query_formula,N_neig=N_neig)
     All_list=get_data_OQMD(res,neigh_list,Energy_filter=E_filter)
     create_prototype_OQMD(All_list,exchange_dict,formula=query_formula)
         
-    print("SUCCESS")
+    print("TERMINATED SUCCESFULLY!")
     categorize()
 
 if __name__=='__main__':
