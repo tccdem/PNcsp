@@ -1,12 +1,18 @@
-import sys
 import numpy as np
 import re
+import os
 import itertools
 import qmpy_rester as qr
 import time
-import os
 from ase.spacegroup import crystal
 from ase.io import read, write
+import sys
+import argparse
+
+def blockPrint():
+    sys.stdout = open(os.devnull, 'w')
+def enablePrint():
+    sys.stdout = sys.__stdout__
 
 def get_Symbol(PN):
     with open("./Z_PN_Elem_extended_MD.csv",'r') as file:
@@ -42,42 +48,81 @@ def convert_formula(formula):
     PNs=[]
     for Symb in elems:
         PNs.append(get_PN(Symb))
-    print("****")
     print("Separated Formula: ",elems, counts)
     print("PNs: ",PNs)
-    print("****")
     return elems, counts, PNs
 
-def get_Neig(compound, N_neig=3):
-    elems, counts, PNs=convert_formula(compound)
+def dist_classifier(PNs,res):
+    dists=[]
+    for i in range(len(res)):
+        dist_local=[]
+        for j in range(len(PNs)):
+            # for k in range(len(res[i])):
+            dist_local.append(abs(PNs[j]-res[i][j]))
+        dist_max=max(dist_local)
+        dists.append(dist_max)
+    return dists
+
+def get_Neig(formula, N_neig=3):
+    elems, counts, PNs=convert_formula(formula)
     PN_new_all=[]
     for i in range(len(PNs)):
         PN_new=[]
+
         for j in np.arange(-1*N_neig,N_neig+1):
-            PN_new.append(PNs[i]+j)
+            if((PNs[i]+j>0) and (PNs[i]+j<119)):
+                PN_new.append(PNs[i]+j)
 
         PN_new_all.append(PN_new)
-    # print(PN_new_all)
+    print("PN_new_all: ",PN_new_all)
+    
+    # Exchange Look-up Table
+    exchange_dict={}
+    for i in range(len(PN_new_all)):
+        for j in range(len(PN_new_all[i])):
+            key=get_Symbol(PN_new_all[i][j])
+            exchange_dict[key]=elems[i]
+    print("exchange_dict: ",exchange_dict)
+
     res=np.array(list(itertools.product(*PN_new_all)))
+    
+    # Drop original formula
     for i in range(len(res)):
         if(np.array_equal(res[i], PNs)):
             res=np.concatenate((res[:i],res[i+1:]), axis=0)
             break
+
+    # Distance Detector
+    dist_list=dist_classifier(PNs,res)
+
+    # New order
+    res_ordered=[]
+    dist_list_ordered=[]
+    for dst in range(1,N_neig+1):
+        for i in range(len(dist_list)):
+            if (dist_list[i]==dst):
+                res_ordered.append(list(res[i]))
+                dist_list_ordered.append(dist_list[i])
+
+    print("dist_list:", dist_list_ordered)
+    print("res_new_len:",len(res_ordered),"res_len",len(res))
+    print("PN  combinations:\n",res_ordered)
+
     Symbol_list=[]
-    for i in range(len(res)):
+    for i in range(len(res_ordered)):
         Symbols=[]
-        for j in range(len(res[i])):
-            Symbols.append(get_Symbol(res[i][j]))
+        for j in range(len(res_ordered[i])):
+            Symbols.append(get_Symbol(res_ordered[i][j]))
         Neig_formula=""    
         for k in range(len(Symbols)):
             Neig_formula+=Symbols[k]+str(counts[k])
         Symbol_list.append(Neig_formula)
-    return Symbol_list
+    return Symbol_list,dist_list_ordered,exchange_dict
 
-def get_Structure(Comp_list,Energy_filter="<0"):
+# OQMD
+def get_data_OQMD(Comp_list,neigh_list,Energy_filter="<0"):
     All_list=[]
-    print("**** Detected Neighbors ****")
-    for i in range(4):
+    for i in range(len(Comp_list)):
         with qr.QMPYRester() as q:
             if(Energy_filter=="none"):
                 kwargs = {
@@ -88,23 +133,43 @@ def get_Structure(Comp_list,Energy_filter="<0"):
                 kwargs = {
                     'composition': {Comp_list[i]},
                     'format': 'json',
-                    'delta_e': Energy_filter,
+                    'delta_e': "<"+str(Energy_filter),
                     }
             list_of_data = q.get_oqmd_phases(False,**kwargs)
+
+
+            if list_of_data is None:
+                print("!!! time exceed !!!")
+                print("!!! Wait for a while and use timer with higher value !!!")
+                break
+            
             if(list_of_data['data']==[]):
                 print(Comp_list[i],"--> no structure")
+                if(i%20==0):
+                    time.sleep(30)
                 continue
+            
+            for ind in range(len(list_of_data['data'])):
+                list_of_data['data'][ind]['Neigh']=neigh_list[i]
+                # list_of_data['data'][ind]['Original']=''.join([i for i in Comp_list[i] if not i.isdigit()])
+                list_of_data['data'][ind]['Original']=Comp_list[i].replace("1","")
 
             All_list.append(list_of_data)
             print(Comp_list[i])
+        if(i%20==0):
+            time.sleep(30)
     if(All_list==[]):
         print("\nWARNING!")
         print("--------")
         print("** No compound could be found **")
     return All_list
 
-def create_Prototype(All_list,formula,dest_path):
+def create_prototype_OQMD(All_list,exchange_dict,formula,dest_path0="./output/"):
     for num1 in range(len(All_list)):
+
+        neigh=All_list[num1]['data'][0]['Neigh']
+        dest_path=dest_path0+str(neigh)+"_Neigh/"
+
         compound=All_list[num1]
         for num2 in range(len(All_list[num1]['data'])):
             name=compound['data'][num2]['name']
@@ -123,39 +188,52 @@ def create_Prototype(All_list,formula,dest_path):
 
             print(name,elem_list,site_list,spacegroup,unit_cell)
 
-            elem_unique=list(set(elem_list))
-            compound_elems, counts=separate_elems(formula)
-            
-            for i in range(len(elem_unique)):
-                for j in range(len(elem_list)):
-                    if(elem_list[j]==elem_unique[i]):
-                        elem_list[j]=compound_elems[i]
+            for i in range(len(elem_list)):
+                elem_list[i]=exchange_dict[elem_list[i]]
 
             struct = crystal(elem_list, site_list, cell=unit_cell,size=(1,1,1))
             if not os.path.exists(dest_path):
                 os.makedirs(dest_path)
             write(dest_path+name+"_sym"+spacegroup.replace("/","")+"_"+str(num2)+'.cif',struct)
 
-def main():
-    formula=sys.argv[1]
-    print(sys.argv)
-    
-    if(len(sys.argv)==3):
-        N_neig=int(sys.argv[2])
-        res=get_Neig(formula,N_neig)
-        All_list=get_Structure(res)
-        create_Prototype(All_list,formula,"./output/")
-    elif(len(sys.argv)==4):
-        N_neig=int(sys.argv[2])
-        Energy_filter=sys.argv[3]
-        res=get_Neig(formula,N_neig)
-        All_list=get_Structure(res,Energy_filter)
-        create_Prototype(All_list,formula,"./output/")
-    else:
-        res=get_Neig(formula)
-        All_list=get_Structure(res)
-        create_Prototype(All_list,formula,"./output/")
+def categorize(path="./output/"):
+    import shutil  
+    import os
+    folders=os.listdir(path)
+    for folder in folders:
+        if("Neigh" not in folder):
+            continue
+        print("--- "+folder+" ---")
+        path_cif=path+folder+"/"
+        # cif_list=os.listdir(path_cif)
+        cif_list=[f for f in os.listdir(path_cif) if os.path.isfile(path_cif+f)]
+        for cif in cif_list:
+            print(cif)
+            sym=cif.split("_")[1].replace("sym","")
+            source_path=path_cif+cif
+            dest_path=path_cif+sym
+            if not os.path.exists(dest_path):
+                os.makedirs(dest_path)
+            # print(source_path, dest_path)
+            dest = shutil.move(source_path, dest_path)  
 
-if __name__ == "__main__":
-    main()
+def main():
+    parser = argparse.ArgumentParser(prog="PNcsp",description= "PNcsp: A PN similarty based initial structure generator.")
+    parser.add_argument('formula')
+    parser.add_argument('-n','--neighbor',default=1,help="Order of neighbors that will be taken into account in similarity search.")
+    parser.add_argument('-f','--filter',default=0,help="Selected neighbors can be limited with Energy Threshold parameter. (default: <0) unit: [eV/atom]. Use \"none\" for no filter.") 
+    args = parser.parse_args()
+
+    query_formula=args.formula
+    N_neig=args.neighbor
+    E_filter=args.filter
+
+    res,neigh_list,exchange_dict=get_Neig(formula=query_formula,N_neig=1)
+    All_list=get_data_OQMD(res,neigh_list,Energy_filter=E_filter)
+    create_prototype_OQMD(All_list,exchange_dict,formula=query_formula)
+        
     print("SUCCESS")
+    categorize()
+
+if __name__=='__main__':
+    main()
