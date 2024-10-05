@@ -27,7 +27,7 @@ This program use Python 3.12.3 under Anaconda3.
 
 \<#_of_neighbor\>: How many neighbor will be taken into account in similarity search. (default: 1)
 
-\<energy_filter\>: Selected neighbors can be limited with Energy Threshold parameter. (default: "<0") unit: [eV/atom]
+\<energy_filter\>: Selected neighbors can be limited with Energy Threshold parameter. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
 
 Created prototypes are shown in "output" folder in current directory.
 
