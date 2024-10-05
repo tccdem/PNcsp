@@ -21,7 +21,7 @@ This program use Python 3.12.3 under Anaconda3.
 ```
 5) Run the Python code:
 ```bash
-  python PNcsp.py <formula> <#_of_neighbor> <energy_filter>
+  python PNcsp.py <formula> -n <#_of_neighbor>  -f <energy_filter>
 ```
 \<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
@@ -33,5 +33,5 @@ Created prototypes are shown in "output" folder in current directory.
 
 ### Example usage
 ```bash
-python Similarity.py Na2Cl1 3 "<0.1"
+python Similarity.py Na2Cl1 -n 3 -f 0.1
 ```
