@@ -23,13 +23,16 @@ This program is based on Python 3 under Anaconda.
 ```
 5) Run the Python code:
 ```bash
-  python PNcsp.py <formula> -n <neighbor_order>  -f <energy_filter>
+  python PNcsp.py <formula> -n <neighbor_order>  -f <energy_filter> -t <sleep_time>
 ```
 \<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
 \<neighbor_order\>: Order of neighbors to be considered in the similarity search.. (Default: 1 (first order neighbors))
 
 \<energy_filter\>: Selected neighbors are limited to those below the energy filter value. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
+
+\<sleep_time\>: Sets sleep time between queries.(default: "none")
+
 
 Created prototypes are shown in "output" folder in current directory.
 
