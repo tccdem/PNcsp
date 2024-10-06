@@ -31,7 +31,7 @@ This program is based on Python 3 under Anaconda.
 
 \<energy_filter\>: Selected neighbors are limited to those below the energy filter value. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
 
-\<sleep_time\>: Sets sleep time between queries.(default: "none")
+\<sleep_time\>: Sets sleep time between queries. Excessive number of queries may cause the server to halt.(default: "none")
 
 
 Created prototypes are shown in "output" folder in current directory.
