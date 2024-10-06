@@ -6,7 +6,7 @@ This work introduces a novel strategy for crystal structure prediction founded u
 
 ![Graphical_Abstract_3](https://github.com/user-attachments/assets/cf590168-ab66-4dc7-8954-de794dfbf780)
 
-PNcsp algorithm scans the [OQMD](https://www.oqmd.org/) for a given order of neighbors and proposes initial crystal structures that are ready for further analysis
+PNcsp is a generaliezed version of this workflow. It scans the [OQMD](https://www.oqmd.org/) for a desired chemical system for given order of neighbors and proposes initial crystal structures that are ready for further analysis.
 
 ### Installation & Usage
 This program use Python 3.12.3 under Anaconda3. 
