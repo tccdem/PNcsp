@@ -8,7 +8,7 @@ This work introduces a novel strategy for crystal structure prediction founded u
 
 Representation of the workflow for predicting stable materials based on PN similarity. Selected prototypes are subjected to further analyses for the investigation of electronic properties.
 
-
+Data source: [OQMD](https://www.oqmd.org/)
 
 ### Installation & Usage
 This program use Python 3.12.3 under Anaconda3. 
@@ -21,11 +21,11 @@ This program use Python 3.12.3 under Anaconda3.
 ```
 5) Run the Python code:
 ```bash
-  python PNcsp.py <formula> -n <#_of_neighbor>  -f <energy_filter>
+  python PNcsp.py <formula> -n <neighbor_order>  -f <energy_filter>
 ```
 \<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
-\<#_of_neighbor\>: How many neighbor will be taken into account in similarity search. (default: 1)
+\<neighbor_order\>: Order of neighbors will be taken into account in similarity search. (Default: 1 (first order neighbors))
 
 \<energy_filter\>: Selected neighbors can be limited with Energy Threshold parameter. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
 
