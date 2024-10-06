@@ -17,6 +17,10 @@ This program use Python 3.12.3 under Anaconda3.
 ```bash
    pip install -r requirements.txt
 ```
+4) Help page:
+```bash
+   python PNcsp.py -h
+```
 5) Run the Python code:
 ```bash
   python PNcsp.py <formula> -n <neighbor_order>  -f <energy_filter>
