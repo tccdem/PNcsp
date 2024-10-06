@@ -27,9 +27,9 @@ This program is based on Python 3 under Anaconda.
 ```
 \<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
-\<neighbor_order\>: Order of neighbors will be taken into account in similarity search. (Default: 1 (first order neighbors))
+\<neighbor_order\>: Order of neighbors to be considered in the similarity search.. (Default: 1 (first order neighbors))
 
-\<energy_filter\>: Selected neighbors can be limited with Energy Threshold parameter. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
+\<energy_filter\>: Selected neighbors are limited to those below the energy filter value. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
 
 Created prototypes are shown in "output" folder in current directory.
 
