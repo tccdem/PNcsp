@@ -63,8 +63,15 @@ def dist_classifier(PNs,res):
         dists.append(dist_max)
     return dists
 
-def get_Neig(formula, N_neig=1):
+def get_Neig(formula, N_neig):
     elems, counts, PNs=convert_formula(formula)
+
+    # In case constituent elemens are too close 
+    for i in range(len(PNs)-1):
+        for j in range(i+1,len(PNs)):
+            if(abs(PNs[i]-PNs[j])<=N_neig):
+                print("\nWARNING: Distance between constituent elemens are lower than N_neig. This may cause redundant operations.\n")
+
     PN_new_all=[]
     for i in range(len(PNs)):
         PN_new=[]
@@ -86,11 +93,27 @@ def get_Neig(formula, N_neig=1):
 
     res=np.array(list(itertools.product(*PN_new_all)))
     
-    # Drop original formula
+    # # Drop original formula
+    # for i in range(len(res)):
+    #     if(np.array_equal(res[i], PNs)):
+    #         res=np.concatenate((res[:i],res[i+1:]), axis=0)
+    #         break
+
+    drop_list=[]
     for i in range(len(res)):
-        if(np.array_equal(res[i], PNs)):
-            res=np.concatenate((res[:i],res[i+1:]), axis=0)
-            break
+        # Drop original formula
+        if(np.array_equal(sorted(res[i]), sorted(PNs))):
+            drop_list.append(i)
+        # Drop elemental dublication
+        if(len(set(res[i]))<len(res[i])):
+            drop_list.append(i)
+
+    print("drop_list:",drop_list)
+    print("res:")
+    print(res)
+    res=np.delete(res, drop_list,axis=0)
+    print("res dropped:")
+    print(res)
 
     # Distance Detector
     dist_list=dist_classifier(PNs,res)
@@ -104,8 +127,8 @@ def get_Neig(formula, N_neig=1):
                 res_ordered.append(list(res[i]))
                 dist_list_ordered.append(dist_list[i])
 
-    print("Order_list:", dist_list_ordered)
-    print("PN  combinations:\n",res_ordered)
+    # print("\nOrder_list:", dist_list_ordered)
+    # print("\nPN  combinations:\n",res_ordered)
 
     Symbol_list=[]
     for i in range(len(res_ordered)):
@@ -116,6 +139,20 @@ def get_Neig(formula, N_neig=1):
         for k in range(len(Symbols)):
             Neig_formula+=Symbols[k]+str(counts[k])
         Symbol_list.append(Neig_formula)
+
+    print("\nSymbol list:\n",Symbol_list)
+
+    for i in range(len(dist_list_ordered)):
+        if(dist_list_ordered[i]==N_neig):
+            res_ordered=res_ordered[i:]
+            dist_list_ordered=dist_list_ordered[i:]
+            Symbol_list=Symbol_list[i:]
+            break
+
+    # print("\nOrder_list:", dist_list_ordered)
+    # print("\nPN  combinations:\n",res_ordered)
+    # print("\nSymbol list:\n",Symbol_list)
+
     return Symbol_list,dist_list_ordered,exchange_dict
 
 # OQMD
