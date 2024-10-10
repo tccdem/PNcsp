@@ -1,3 +1,11 @@
+#!/usr/bin/env python
+
+###############################################################
+#                                                             #
+#                          PNcsp                              #
+#                                                             #
+###############################################################
+
 import numpy as np
 import re
 import os
@@ -70,7 +78,7 @@ def get_Neig(formula, N_neig):
     for i in range(len(PNs)-1):
         for j in range(i+1,len(PNs)):
             if(abs(PNs[i]-PNs[j])<=N_neig):
-                print("\nWARNING: Distance between constituent elemens are lower than N_neig. This may cause redundant operations.\n")
+                print("\nWARNING: PN distance between some of constituent elemens are lower than N_neig. This may cause peculiar outputs or redundant operations.\n")
 
     PN_new_all=[]
     for i in range(len(PNs)):
@@ -88,6 +96,7 @@ def get_Neig(formula, N_neig):
     for i in range(len(PN_new_all)):
         for j in range(len(PN_new_all[i])):
             key=get_Symbol(PN_new_all[i][j])
+            print(key,":",elems[i])
             exchange_dict[key]=elems[i]
     print("exchange_dict: ",exchange_dict)
 
@@ -108,12 +117,7 @@ def get_Neig(formula, N_neig):
         if(len(set(res[i]))<len(res[i])):
             drop_list.append(i)
 
-    print("drop_list:",drop_list)
-    print("res:")
-    print(res)
     res=np.delete(res, drop_list,axis=0)
-    print("res dropped:")
-    print(res)
 
     # Distance Detector
     dist_list=dist_classifier(PNs,res)
@@ -127,8 +131,8 @@ def get_Neig(formula, N_neig):
                 res_ordered.append(list(res[i]))
                 dist_list_ordered.append(dist_list[i])
 
-    # print("\nOrder_list:", dist_list_ordered)
-    # print("\nPN  combinations:\n",res_ordered)
+    print("\nOrder_list:", dist_list_ordered)
+    print("\nPN  combinations:\n",res_ordered)
 
     Symbol_list=[]
     for i in range(len(res_ordered)):
@@ -202,11 +206,12 @@ def get_data_OQMD(Comp_list,neigh_list,Energy_filter,timer):
         print("** No compound could be found **")
     return All_list
 
-def create_prototype_OQMD(All_list,exchange_dict,formula,dest_path0="./output/"):
+def create_prototype_OQMD(All_list,exchange_dict,formula):
+    path="./output_"+formula+"/"
     for num1 in range(len(All_list)):
 
         neigh=All_list[num1]['data'][0]['Neigh']
-        dest_path=dest_path0+str(neigh)+"_Neigh/"
+        dest_path=path+str(neigh)+"_Neigh/"
 
         compound=All_list[num1]
         for num2 in range(len(All_list[num1]['data'])):
@@ -224,8 +229,7 @@ def create_prototype_OQMD(All_list,exchange_dict,formula,dest_path0="./output/")
                 elem=sites[i].split(' @ ')[0]
                 elem_list.append(elem)
 
-            # print(name,elem_list,site_list,spacegroup,unit_cell)
-
+            # IF exchange_dict[elem_list[i]] values are the same, detect it and do realated operations.
             for i in range(len(elem_list)):
                 elem_list[i]=exchange_dict[elem_list[i]]
 
@@ -233,24 +237,25 @@ def create_prototype_OQMD(All_list,exchange_dict,formula,dest_path0="./output/")
             if not os.path.exists(dest_path):
                 os.makedirs(dest_path)
             
-            write(dest_path+formula+"_"+name+"_sym"+spacegroup.replace("/","")+"_"+str(num2)+'.cif',struct)
+            write(dest_path+formula+"_"+name+"_"+spacegroup.replace("/","")+"_"+str(num2)+'.cif',struct)
 
-def categorize(path="./output/"):
+def categorize(N_neig,formula):
     import shutil  
     import os
-    folders=os.listdir(path)
-    for folder in folders:
-        path_cif=path+folder+"/"
-        # cif_list=os.listdir(path_cif)
-        cif_list=[f for f in os.listdir(path_cif) if os.path.isfile(path_cif+f)]
-        for cif in cif_list:
-            sym=cif.split("_")[2].replace("sym","")
-            source_path=path_cif+cif
-            dest_path=path_cif+sym
-            if not os.path.exists(dest_path):
-                os.makedirs(dest_path)
-            # print(source_path, dest_path)
-            dest = shutil.move(source_path, dest_path)  
+    path="./output_"+formula+"/"+str(N_neig)+"_Neigh/"
+    # cifs=os.listdir(path)
+    cifs=[f for f in os.listdir(path) if ".cif" in f]
+    for cif in cifs:
+        source_path=path+cif
+
+        sym=cif.split("_")[2]
+        dest_path=path+sym+"/"
+
+        if not os.path.exists(dest_path):
+            os.makedirs(dest_path)
+
+        dest = shutil.move(source_path, dest_path)  
+
 def show_config(formula,N_neig,E_filter,timer):
     print("\nProgram Configuration")
     print("---------------------")
@@ -284,7 +289,7 @@ def main():
     create_prototype_OQMD(All_list,exchange_dict,formula=formula)
         
     print("TERMINATED SUCCESFULLY!")
-    categorize()
+    categorize(N_neig=N_neig,formula=formula)
 
 if __name__=='__main__':
     main()
