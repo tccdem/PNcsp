@@ -56,8 +56,9 @@ def convert_formula(formula):
     PNs=[]
     for Symb in elems:
         PNs.append(get_PN(Symb))
-    print("Separated Formula: ",elems, counts)
-    print("PNs: ",PNs)
+    print("Separated Formula:",elems)
+    print("PNs:",PNs)
+    print("Ratios:",counts)
     return elems, counts, PNs
 
 def dist_classifier(PNs,res):
@@ -78,12 +79,13 @@ def get_Neig(formula, N_neig):
     for i in range(len(PNs)-1):
         for j in range(i+1,len(PNs)):
             if(abs(PNs[i]-PNs[j])<=N_neig):
-                print("\nWARNING: PN distance between some of constituent elemens are lower than N_neig. This may cause peculiar outputs or redundant operations.\n")
+                # print("\nWARNING: PN distance between some of constituent elemens are lower than N_neig. This may cause peculiar or incomplete outputs.\n")
+                print("\nWARNING: PN distance between",elems[i],"and",elems[j] ,"are lower than N_neig. This may cause peculiar or incomplete outputs.")
+    print("\n")
 
     PN_new_all=[]
     for i in range(len(PNs)):
         PN_new=[]
-
         for j in np.arange(-1*N_neig,N_neig+1):
             if((PNs[i]+j>0) and (PNs[i]+j<119)):
                 PN_new.append(PNs[i]+j)
@@ -91,12 +93,29 @@ def get_Neig(formula, N_neig):
         PN_new_all.append(PN_new)
     print("PN_new_all: ",PN_new_all)
     
+    # PN_new_all=[]
+    # for i in range(len(PNs)):
+    #     PN_new=[]
+    #     for j in np.arange(-1*N_neig,N_neig+1):
+    #         if((PNs[i]+j>0) and (PNs[i]+j<119)):
+    #             ind_dup=0
+    #             for k in range(len(PNs)):
+    #                 if(k==i):
+    #                     continue
+    #                 if(PNs[i]+j == PNs[k]):
+    #                     ind_dup=1
+    #                     break
+    #             if(ind_dup==0):
+    #                 PN_new.append(PNs[i]+j)
+    #     PN_new_all.append(PN_new)
+    # print("Neigboring PNs: ",PN_new_all)
+    
     # Exchange Look-up Table
     exchange_dict={}
     for i in range(len(PN_new_all)):
         for j in range(len(PN_new_all[i])):
             key=get_Symbol(PN_new_all[i][j])
-            print(key,":",elems[i])
+            # print(key,":",elems[i])
             exchange_dict[key]=elems[i]
     print("exchange_dict: ",exchange_dict)
 
@@ -131,8 +150,8 @@ def get_Neig(formula, N_neig):
                 res_ordered.append(list(res[i]))
                 dist_list_ordered.append(dist_list[i])
 
-    print("\nOrder_list:", dist_list_ordered)
-    print("\nPN  combinations:\n",res_ordered)
+    # print("\nOrder_list:", dist_list_ordered)
+    # print("\nPN  combinations:\n",res_ordered)
 
     Symbol_list=[]
     for i in range(len(res_ordered)):
@@ -144,8 +163,6 @@ def get_Neig(formula, N_neig):
             Neig_formula+=Symbols[k]+str(counts[k])
         Symbol_list.append(Neig_formula)
 
-    print("\nSymbol list:\n",Symbol_list)
-
     for i in range(len(dist_list_ordered)):
         if(dist_list_ordered[i]==N_neig):
             res_ordered=res_ordered[i:]
@@ -154,9 +171,9 @@ def get_Neig(formula, N_neig):
             break
 
     # print("\nOrder_list:", dist_list_ordered)
-    # print("\nPN  combinations:\n",res_ordered)
-    # print("\nSymbol list:\n",Symbol_list)
-
+    print("\nPN  combinations and Symbol list")
+    for i in range(len(res_ordered)):
+        print(res_ordered[i],Symbol_list[i])
     return Symbol_list,dist_list_ordered,exchange_dict
 
 # OQMD
@@ -179,8 +196,9 @@ def get_data_OQMD(Comp_list,neigh_list,Energy_filter,timer):
 
 
             if list_of_data is None:
-                print("!!! time exceed !!!")
-                print("!!! Wait for a while and use timer with higher value !!!")
+                print("\nWARNING!")
+                print("--------")
+                print("Time exceed ! Wait for a while and use timer with higher value !!!")
                 break
             
             if(list_of_data['data']==[]):
@@ -203,7 +221,8 @@ def get_data_OQMD(Comp_list,neigh_list,Energy_filter,timer):
     if(All_list==[]):
         print("\nWARNING!")
         print("--------")
-        print("** No compound could be found **")
+        print("No compound could be found !!!")
+        sys.exit()
     return All_list
 
 def create_prototype_OQMD(All_list,exchange_dict,formula):
@@ -229,9 +248,26 @@ def create_prototype_OQMD(All_list,exchange_dict,formula):
                 elem=sites[i].split(' @ ')[0]
                 elem_list.append(elem)
 
-            # IF exchange_dict[elem_list[i]] values are the same, detect it and do realated operations.
             for i in range(len(elem_list)):
                 elem_list[i]=exchange_dict[elem_list[i]]
+
+            # # IF exchange_dict[elem_list[i]] values are the same, detect it and do related operations.
+            # list_dup=[]
+            # for i in range(len(elem_list)-1):
+            #     dup=[]
+            #     for j in range(i+1,len(elem_list)):
+            #         if(elem_list[i]==elem_list[j]):
+            #             dup.append(j)
+            #     if(dup!=[]):
+            #         dup.append(i)
+            #         list_dup.append(dup)
+
+            # not_included = []
+            # for element in list(exchange_dict.values()):
+            #     if element not in elem_list:
+            #         not_included.append(element)
+            # print("not_included:",not_included)
+            # print("elem_list:",elem_list)
 
             struct = crystal(elem_list, site_list, cell=unit_cell,size=(1,1,1))
             if not os.path.exists(dest_path):
