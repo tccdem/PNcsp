@@ -1,5 +1,16 @@
 # PNcsp
 
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
 This repository contains the code implementation of the CSP method, as discussed in the paper [Phase Prediction via Crystal Structure Similarity in the Periodic Number Representation](https://pubs.acs.org/doi/full/10.1021/acs.inorgchem.4c03137), developed by the [TCCDEM](https://github.com/tccdem/) team.
 
 This work introduces a novel strategy for crystal structure prediction founded upon the principle of chemical similarity.  Our method uses Mendeleev's Periodic Number (PN) as a quantitative measure of substitutability to identify potential crystal structures for unexplored chemical systems. Representation of the workflow for predicting stable materials based on PN similarity is shown below. 
