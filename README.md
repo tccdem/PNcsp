@@ -1,6 +1,6 @@
 # PNcsp
 
-This repository represents the efforts of the [TCCDEM](https://github.com/tccdem/) which is an implementation of Phase Prediction via Crystal Structure Similarity in the Periodic Number Pepresentation. 
+This repository represents the efforts of the [TCCDEM](https://github.com/tccdem/) which is an implementation of [Phase Prediction via Crystal Structure Similarity in the Periodic Number Pepresentation](https://pubs.acs.org/doi/full/10.1021/acs.inorgchem.4c03137) paper. 
 
 This work introduces a novel strategy for crystal structure prediction founded upon the principle of chemical similarity.  Our method uses Mendeleev's Periodic Number (PN) as a quantitative measure of substitutability to identify potential crystal structures for unexplored chemical systems. Representation of the workflow for predicting stable materials based on PN similarity is shown below. 
 
