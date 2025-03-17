@@ -25,7 +25,7 @@ This program is based on Python 3 under Anaconda.
 ```
 5) Run the Python code:
 ```bash
-  python PNcsp.py <formula> -n <neighbor_order>  -f <energy_filter> -t <sleep_time>
+  python PNcsp.py <formula> -n <neighbor_order>  -f <energy_filter> -t <sleep_time> -o <online>
 ```
 \<formula\>: Pretty formula of chemical system for query (Ex. Cu2Mn1Al1)
 
@@ -34,6 +34,8 @@ This program is based on Python 3 under Anaconda.
 \<energy_filter\>: Selected neighbors are limited to those below the energy filter value. (default: 0) unit: [eV/atom]. Use "none" to disable filter.
 
 \<sleep_time\>: Sets sleep time between queries. Excessive number of queries may cause the server to halt.(default: "none")
+
+\<online\>: Sets online (True) or offline (False) search in OQMD. For offline seach, you should download and set up offline OQMD database (https://oqmd.org/download/).  (default: "False")
 
 
 Created prototypes are shown in "output" folder in current directory.

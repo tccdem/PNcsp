@@ -10,12 +10,12 @@ import numpy as np
 import re
 import os
 import itertools
-import qmpy_rester as qr
 import time
-from ase.spacegroup import crystal
-from ase.io import read, write
 import sys
 import argparse
+from db import OQMDoffline
+from db import OQMDonline
+
 
 def blockPrint():
     sys.stdout = open(os.devnull, 'w')
@@ -23,7 +23,7 @@ def enablePrint():
     sys.stdout = sys.__stdout__
 
 def get_Symbol(PN):
-    with open("./Z_PN_Elem_extended_MD.csv",'r') as file:
+    with open("./db/data/Z_PN_Elem_extended_MD.csv",'r') as file:
         Comp_list={}
         for line in file:
             if 'PN' in line:
@@ -34,7 +34,7 @@ def get_Symbol(PN):
     return(Comp_list[str(PN)])
 
 def get_PN(Symb):
-    with open("./Z_PN_Elem_extended_MD.csv",'r') as file:
+    with open("./db/data/Z_PN_Elem_extended_MD.csv",'r') as file:
         Comp_list={}
         for line in file:
             if 'PN' in line:
@@ -176,111 +176,13 @@ def get_Neig(formula, N_neig):
         print(res_ordered[i],Symbol_list[i])
     return Symbol_list,dist_list_ordered,exchange_dict
 
-# OQMD
-def get_data_OQMD(Comp_list,neigh_list,Energy_filter,timer):
-    All_list=[]
-    for i in range(len(Comp_list)):
-        with qr.QMPYRester() as q:
-            if(Energy_filter=="none"):
-                kwargs = {
-                    'composition': {Comp_list[i]},
-                    'format': 'json',
-                    }
-            else:
-                kwargs = {
-                    'composition': {Comp_list[i]},
-                    'format': 'json',
-                    'delta_e': "<"+str(Energy_filter),
-                    }
-            list_of_data = q.get_oqmd_phases(False,**kwargs)
-
-
-            if list_of_data is None:
-                print("\nWARNING!")
-                print("--------")
-                print("Time exceed ! Wait for a while and use timer with higher value !!!")
-                break
-            
-            if(list_of_data['data']==[]):
-                print(Comp_list[i],"--> no structure")
-                if(timer!="none"):
-                    time.sleep(timer)
-                continue
-            
-            for ind in range(len(list_of_data['data'])):
-                list_of_data['data'][ind]['Neigh']=neigh_list[i]
-                # list_of_data['data'][ind]['Original']=''.join([i for i in Comp_list[i] if not i.isdigit()])
-                # list_of_data['data'][ind]['Original']=Comp_list[i].replace("1","")
-                list_of_data['data'][ind]['Original']=Comp_list[i]
-
-
-            All_list.append(list_of_data)
-            print(Comp_list[i])
-        if(timer!="none"):
-            time.sleep(timer)
-    if(All_list==[]):
-        print("\nWARNING!")
-        print("--------")
-        print("No compound could be found !!!")
-        sys.exit()
-    return All_list
-
-def create_prototype_OQMD(All_list,exchange_dict,formula):
-    path="./output_"+formula+"/"
-    for num1 in range(len(All_list)):
-
-        neigh=All_list[num1]['data'][0]['Neigh']
-        dest_path=path+str(neigh)+"_Neigh/"
-
-        compound=All_list[num1]
-        for num2 in range(len(All_list[num1]['data'])):
-            name=compound['data'][num2]['name']
-            # elems=re.findall('[A-Z][^A-Z]*', name)
-            spacegroup=compound['data'][num2]['spacegroup']
-            unit_cell=compound['data'][num2]['unit_cell']
-
-            sites=compound['data'][num2]['sites']
-            site_list=[]
-            elem_list=[]
-            for i in range(len(sites)):
-                site=tuple(sites[i].split(' @ ')[1].split(' '))
-                site_list.append(site)
-                elem=sites[i].split(' @ ')[0]
-                elem_list.append(elem)
-
-            for i in range(len(elem_list)):
-                elem_list[i]=exchange_dict[elem_list[i]]
-
-            # # IF exchange_dict[elem_list[i]] values are the same, detect it and do related operations.
-            # list_dup=[]
-            # for i in range(len(elem_list)-1):
-            #     dup=[]
-            #     for j in range(i+1,len(elem_list)):
-            #         if(elem_list[i]==elem_list[j]):
-            #             dup.append(j)
-            #     if(dup!=[]):
-            #         dup.append(i)
-            #         list_dup.append(dup)
-
-            # not_included = []
-            # for element in list(exchange_dict.values()):
-            #     if element not in elem_list:
-            #         not_included.append(element)
-            # print("not_included:",not_included)
-            # print("elem_list:",elem_list)
-
-            struct = crystal(elem_list, site_list, cell=unit_cell,size=(1,1,1))
-            if not os.path.exists(dest_path):
-                os.makedirs(dest_path)
-            
-            write(dest_path+formula+"_"+name+"_"+spacegroup.replace("/","")+"_"+str(num2)+'.cif',struct)
-
 def categorize(N_neig,formula):
     import shutil  
     import os
     path="./output_"+formula+"/"+str(N_neig)+"_Neigh/"
     # cifs=os.listdir(path)
     cifs=[f for f in os.listdir(path) if ".cif" in f]
+    print("Total Number of CIF files:",len(cifs))
     for cif in cifs:
         source_path=path+cif
 
@@ -292,10 +194,10 @@ def categorize(N_neig,formula):
 
         dest = shutil.move(source_path, dest_path)  
 
-def show_config(formula,N_neig,E_filter,timer):
+def show_config(formula,N_neig,E_filter,timer,online):
     print("\nProgram Configuration")
     print("---------------------")
-    print("Query formula:\t",formula,"\nNeighbor order:\t",N_neig,"\nEnergy filter:\t",E_filter,"\nSleep timer:\t",timer)
+    print("Query formula:\t",formula,"\nNeighbor order:\t",N_neig,"\nEnergy filter:\t",E_filter,"\nSleep timer:\t",timer,"\nOnline: \t",online)
     print("---------------------\n")
 
 def main():
@@ -304,10 +206,12 @@ def main():
     parser.add_argument('-n','--neighbor',default=1,help="Order of neighbors to be considered in the similarity search.")
     parser.add_argument('-f','--filter',default=0,help="Selected neighbors are limited to those below the energy filter value. (default: 0) unit: [eV/atom]. Use \"none\" for no filter.") 
     parser.add_argument('-t','--time_sleep',default="none",help="Set sleep time between queries. Excessive number of queries may cause the server to halt.(default: \"none\")")
+    parser.add_argument('-o','--online',default=False,help="Sets online (True) or offline (False) search in OQMD (default: False). For offline seach, you should download and set up offline OQMD database. See https://oqmd.org/download/.")
     args = parser.parse_args()
 
     formula=args.formula
     N_neig=int(args.neighbor)
+    online=bool(args.online)
 
     if(args.time_sleep =="none"):
         time_sleep=args.time_sleep
@@ -319,10 +223,15 @@ def main():
     else:
         E_filter=int(args.filter)
 
-    show_config(formula=formula,N_neig=N_neig,E_filter=E_filter,timer=time_sleep)
+    show_config(formula=formula,N_neig=N_neig,E_filter=E_filter,timer=time_sleep,online=online)
     res,neigh_list,exchange_dict=get_Neig(formula=formula,N_neig=N_neig)
-    All_list=get_data_OQMD(res,neigh_list,Energy_filter=E_filter,timer=time_sleep)
-    create_prototype_OQMD(All_list,exchange_dict,formula=formula)
+
+    if(online==True):
+        All_list=OQMDonline.get_data_OQMD(res,neigh_list,Energy_filter=E_filter,timer=time_sleep)
+        OQMDonline.create_prototype_OQMD(All_list,exchange_dict,formula=formula)
+    else:
+        All_list=OQMDoffline.get_data_OQMD(res,neigh_list,Energy_filter=E_filter,timer=time_sleep)
+        OQMDoffline.create_prototype_OQMD(All_list,exchange_dict,formula=formula)
         
     print("TERMINATED SUCCESFULLY!")
     categorize(N_neig=N_neig,formula=formula)
